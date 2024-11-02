@@ -10,7 +10,6 @@ spec:
   source:
     repoURL: 'https://github.com/ilysha20/gitlab-crgocd'
     path: minio-console/manifests
-    targetRevision: master
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: gitlab

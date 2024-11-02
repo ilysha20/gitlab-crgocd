@@ -25,22 +25,22 @@ spec:
           value: local-path
         - name: replica.replicaCount
           value: '1'
-#        - name: master.resources.requests.memory
-#          value: "256Mi"
-#        - name: master.resources.requests.cpu
-#          value: "0.5"
-#        - name: master.resources.limits.memory
-#          value: "256Mi"
-#        - name: master.resources.limits.cpu
-#          value: "0.5"
-#        - name: replica.resources.requests.memory
-#          value: "256Mi"
-#        - name: replica.resources.requests.cpu
-#          value: "0.5"
-#        - name: replica.resources.limits.memory
-#          value: "256Mi"
-#        - name: replica.resources.limits.cpu
-#          value: "0.5"
+       - name: master.resources.requests.memory
+         value: "256Mi"
+       - name: master.resources.requests.cpu
+         value: "0.5"
+       - name: master.resources.limits.memory
+         value: "256Mi"
+       - name: master.resources.limits.cpu
+         value: "0.5"
+       - name: replica.resources.requests.memory
+         value: "256Mi"
+       - name: replica.resources.requests.cpu
+         value: "0.5"
+       - name: replica.resources.limits.memory
+         value: "256Mi"
+       - name: replica.resources.limits.cpu
+         value: "0.5"
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: gitlab
