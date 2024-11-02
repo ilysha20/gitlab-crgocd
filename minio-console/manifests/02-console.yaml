@@ -28,8 +28,6 @@ spec:
       labels:
         app: console
     spec:
-      imagePullSecrets:
-        - name: myregistrykey
       containers:
         - name: console
           image: minio/mc:latest
