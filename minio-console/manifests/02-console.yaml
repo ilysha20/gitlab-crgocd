@@ -30,28 +30,28 @@ spec:
     spec:
       containers:
         - name: console
-          image: minio/mc:latest
+          image: minio/console:v0.29.0
           imagePullPolicy: "IfNotPresent"
-          command: ["sh", "-c"]
           args:
-            - |
-              mc alias set myminio http://gitlab-minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY && \
-              mc ls myminio
+            - server
+          ports:
+            - containerPort: 9090
+              name: http
           env:
-            - name: MINIO_SERVER_HOST
-              value: "gitlab-minio"
-            - name: MINIO_SERVER_PORT_NUMBER
-              value: "9000"
-            - name: MINIO_ACCESS_KEY
-              value: "admin"
-            - name: MINIO_SECRET_KEY
-              value: "password"
+            - name: CONSOLE_MINIO_SERVER
+              value: "http://gitlab-minio:9000"
+            - name: CONSOLE_PORT
+              value: "9090"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minioconsole
+  # ## Fix to new versions of ingress controllers
+  # annotations:
+  #   kubernetes.io/ingress.class: "system-ingress"
 spec:
+  ## Fix to new versions of ingress controllers
   ingressClassName: "system-ingress"
   rules:
     - host: "minio.homelab.local"
