@@ -64,3 +64,5 @@ spec:
                 name: console
                 port:
                   name: http
+
+                  

@@ -1,71 +1,122 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+apiVersion: v1
+kind: Namespace
 metadata:
   name: minio
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://charts.min.io/
-    chart: minio
-    targetRevision: 5.0.5 # Specify the chart version or use `latest`
-    helm:
-      values: |
-        replicas: 1
-        rootUser: minioadmin
-        rootPassword: minioadmin123
-        accessKey: "minio-access-key"
-        secretKey: "minio-secret-key"
-        ingress:
-          enabled: true
-          hosts:
-            - host: minio.example.com
-              paths: ["/"]
-          annotations:
-            kubernetes.io/ingress.class: nginx
-            cert-manager.io/issuer: "letsencrypt-prod"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: minio
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+
 ---
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+provisioner: rancher.io/local-path
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+  namespace: minio
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /mnt/local-storage/minio # Убедитесь, что этот путь существует на узле
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+  namespace: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: minio
-  namespace: argocd
+  namespace: minio
 spec:
-  project: default
-  source:
-    repoURL: https://charts.min.io/
-    chart: minio
-    targetRevision: 5.0.5 # Specify the chart version or use `latest`
-    helm:
-      values: |
-        replicas: 1
-        rootUser: minioadmin
-        rootPassword: minioadmin123
-        accessKey: "minio-access-key"
-        secretKey: "minio-secret-key"
-        ingress:
-          enabled: true
-          hosts:
-            - host: minio.example.com
-              paths: ["/"]
-          annotations:
-            kubernetes.io/ingress.class: nginx
-            cert-manager.io/issuer: "letsencrypt-prod"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: minio
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server", "/data"]
+          env:
+            - name: MINIO_ACCESS_KEY
+              value: "minio-access-key" # Замените на ваш ключ
+            - name: MINIO_SECRET_KEY
+              value: "minio-secret-key" # Замените на ваш секрет
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: minio-storage
+              mountPath: /data
+      volumes:
+        - name: minio-storage
+          persistentVolumeClaim:
+            claimName: local-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30000 # Выберите порт между 30000 и 32767
+  selector:
+    app: minio
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: minio
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: minio.example.com # Замените на ваш домен
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio
+                port:
+                  number: 9000
+  tls:
+    - hosts:
+        - minio.example.com
+      secretName: minio-tls # Убедитесь, что этот секрет существует
