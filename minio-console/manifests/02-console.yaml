@@ -32,7 +32,7 @@ spec:
         - name: myregistrykey
       containers:
         - name: console
-          image: minio/console:latest
+          image: minio/mc:latest
           imagePullPolicy: "IfNotPresent"
           args:
             - server
