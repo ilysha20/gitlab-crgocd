@@ -1,18 +1,71 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: minio-operator
-  namespace: gitlab
+  name: minio
+  namespace: argocd
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/cniackz/minio-argocd.git'
-    targetRevision: HEAD    # Set to a specific branch, tag, or commit if desired
-    path: minio-operator    # Path to the configuration files in the repository
+    repoURL: https://charts.min.io/
+    chart: minio
+    targetRevision: 5.0.5 # Specify the chart version or use `latest`
+    helm:
+      values: |
+        replicas: 1
+        rootUser: minioadmin
+        rootPassword: minioadmin123
+        accessKey: "minio-access-key"
+        secretKey: "minio-secret-key"
+        ingress:
+          enabled: true
+          hosts:
+            - host: minio.example.com
+              paths: ["/"]
+          annotations:
+            kubernetes.io/ingress.class: nginx
+            cert-manager.io/issuer: "letsencrypt-prod"
   destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: minio-operator  # Destination namespace in Kubernetes
+    server: https://kubernetes.default.svc
+    namespace: minio
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://charts.min.io/
+    chart: minio
+    targetRevision: 5.0.5 # Specify the chart version or use `latest`
+    helm:
+      values: |
+        replicas: 1
+        rootUser: minioadmin
+        rootPassword: minioadmin123
+        accessKey: "minio-access-key"
+        secretKey: "minio-secret-key"
+        ingress:
+          enabled: true
+          hosts:
+            - host: minio.example.com
+              paths: ["/"]
+          annotations:
+            kubernetes.io/ingress.class: nginx
+            cert-manager.io/issuer: "letsencrypt-prod"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minio
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
