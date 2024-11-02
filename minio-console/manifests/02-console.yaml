@@ -34,6 +34,7 @@ spec:
           imagePullPolicy: "IfNotPresent"
           args:
             - server
+            - /data
           ports:
             - containerPort: 9090
               name: http
@@ -47,11 +48,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minioconsole
-  # ## Fix to new versions of ingress controllers
-  # annotations:
-  #   kubernetes.io/ingress.class: "system-ingress"
 spec:
-  ## Fix to new versions of ingress controllers
   ingressClassName: "system-ingress"
   rules:
     - host: "minio.homelab.local"
