@@ -30,13 +30,18 @@ spec:
     spec:
       containers:
         - name: console
-          image: minio/mc:latest
+          image: bitnami/minio-client:latest
           imagePullPolicy: "IfNotPresent"
           args:
             - server
           ports:
             - containerPort: 9090
               name: http
+          env:
+            - name: MINIO_SERVER_HOST
+              value: "http://gitlab-minio:9000"
+            - name: MINIO_SERVER_PORT_NUMBER
+              value: "9090"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
