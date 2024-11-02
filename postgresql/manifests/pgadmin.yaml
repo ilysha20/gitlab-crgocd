@@ -6,12 +6,11 @@ metadata:
   annotations:
     volume.beta.kubernetes.io/storage-class: "local-path"
 spec:
+  accessModes: [ "ReadWriteOnce" ]
   storageClassName: "local-path"
-  accessModes:
-    - ReadWriteOncePod
   resources:
     requests:
-      storage: 500Mi
+      storage: 500Mi 
 ---
 kind: Service
 apiVersion: v1
