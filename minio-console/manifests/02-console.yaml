@@ -30,19 +30,22 @@ spec:
     spec:
       containers:
         - name: console
-          image: bitnami/minio-client:latest
+          image: minio/mc:latest
           imagePullPolicy: "IfNotPresent"
+          command: ["sh", "-c"]
           args:
-            - server
-            - /data
-          ports:
-            - containerPort: 9090
-              name: http
+            - |
+              mc alias set myminio http://gitlab-minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY && \
+              mc ls myminio
           env:
             - name: MINIO_SERVER_HOST
-              value: "http://gitlab-minio:9000"
+              value: "gitlab-minio"
             - name: MINIO_SERVER_PORT_NUMBER
-              value: "9090"
+              value: "9000"
+            - name: MINIO_ACCESS_KEY
+              value: "admin"
+            - name: MINIO_SECRET_KEY
+              value: "password"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
