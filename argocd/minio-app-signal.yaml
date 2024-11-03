@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitlab-minio
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: 'https://charts.bitnami.com/bitnami'
+    chart: minio
+    targetRevision: "12.6.4"
+    helm:
+      parameters:
+        - name: mode
+          value: distributed
+        - name: auth.rootUser
+          value: admin
+        - name: auth.rootPassword
+          value: password
+        - name: console.enabled  # Включаем консоль MinIO
+          value: "true"
+        - name: console.service.type
+          value: ClusterIP  # Настройка типа сервиса для консоли
+        - name: disableWebUI
+          value: "false"
+        - name: statefulset.replicaCount
+          value: "2"
+        - name: statefulset.zones
+          value: "1"
+        - name: statefulset.drivesPerNode
+          value: "2"
+        - name: persistence.enabled
+          value: "true"
+        - name: persistence.storageClass
+          value: local-path
+        - name: persistence.size
+          value: 2Gi
+        - name: volumePermissions.enabled
+          value: "true"
+
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: gitlab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minioconsole
+  namespace: gitlab
+spec:
+  ingressClassName: "system-ingress"
+  rules:
+    - host: "minio.homelab.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-console  # Имя сервиса, созданного чартом MinIO для консоли
+                port:
+                  number: 9000  # Порт для HTTPS-консоли
